@@ -34,5 +34,5 @@ def get_dataset(split='train'):
 
 def get_statistics(split='test'):
     base_path = os.path.dirname(__file__)
-    path = os.path.join(base_path, 'data', split+'_stats.npz')
+    path = os.path.join(base_path, 'data', split+'_scaffolds_stats.npz')
     return np.load(path, allow_pickle=True)['stats'].item()
