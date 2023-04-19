@@ -87,10 +87,12 @@ def get_all_metrics(gen, k=None, n_jobs=1,
             close_pool = True
         else:
             pool = 1
+    print('Calculating %valid...')
     metrics['valid'] = fraction_valid(gen, n_jobs=pool)
     gen = remove_invalid(gen, canonize=True)
     if not isinstance(k, (list, tuple)):
         k = [k]
+    print('Calculating unique@...')
     for _k in k:
         metrics['unique@{}'.format(_k)] = fraction_unique(gen, _k, pool)
 
@@ -108,29 +110,41 @@ def get_all_metrics(gen, k=None, n_jobs=1,
     mols = mapper(pool)(get_mol, gen)
     kwargs = {'n_jobs': pool, 'device': device, 'batch_size': batch_size}
     kwargs_fcd = {'n_jobs': n_jobs, 'device': device, 'batch_size': batch_size}
+    print('Calculating Frechet ChemNet Distance (FCD)/Test...')
     metrics['FCD/Test'] = FCDMetric(**kwargs_fcd)(gen=gen, pref=ptest['FCD'])
+    print('Calculating Similarity to nearest neighbour (SNN)/Test...')
     metrics['SNN/Test'] = SNNMetric(**kwargs)(gen=mols, pref=ptest['SNN'])
+    print('Calculating Fragment similarity (Frag)/Test...')
     metrics['Frag/Test'] = FragMetric(**kwargs)(gen=mols, pref=ptest['Frag'])
+    print('Calculating Scaffold similarity (Scaf)/Test...')
     metrics['Scaf/Test'] = ScafMetric(**kwargs)(gen=mols, pref=ptest['Scaf'])
     if ptest_scaffolds is not None:
+        print('Calculating Frechet ChemNet Distance (FCD)/TestSF...')
         metrics['FCD/TestSF'] = FCDMetric(**kwargs_fcd)(
             gen=gen, pref=ptest_scaffolds['FCD']
         )
+        print('Calculating Similarity to nearest neighbour (SNN)/TestSF...')
         metrics['SNN/TestSF'] = SNNMetric(**kwargs)(
             gen=mols, pref=ptest_scaffolds['SNN']
         )
+        print('Calculating Fragment similarity (Frag)/TestSF...')
         metrics['Frag/TestSF'] = FragMetric(**kwargs)(
             gen=mols, pref=ptest_scaffolds['Frag']
         )
+        print('Calculating Scaffold similarity (Scaf)/TestSF...')
         metrics['Scaf/TestSF'] = ScafMetric(**kwargs)(
             gen=mols, pref=ptest_scaffolds['Scaf']
         )
 
+    print('Calculating Internal diversity (IntDiv)...')
     metrics['IntDiv'] = internal_diversity(mols, pool, device=device)
+    print('Calculating Internal diversity 2 (IntDiv2)...')
     metrics['IntDiv2'] = internal_diversity(mols, pool, device=device, p=2)
+    print('Calculating %passes filters (Filters)...')
     metrics['Filters'] = fraction_passes_filters(mols, pool)
 
     # Properties
+    print('Calculating distribution difference for logP, SA, QED, weight...')
     for name, func in [('logP', logP), ('SA', SA),
                        ('QED', QED),
                        ('weight', weight)]:
@@ -138,6 +152,7 @@ def get_all_metrics(gen, k=None, n_jobs=1,
             gen=mols, pref=ptest[name])
 
     if train is not None:
+        print('Calculating Novelty...')
         metrics['Novelty'] = novelty(mols, train, pool)
     enable_rdkit_log()
     if close_pool:
