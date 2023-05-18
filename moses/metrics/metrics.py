@@ -89,7 +89,7 @@ def get_all_metrics(gen, k=None, n_jobs=1,
             pool = 1
     print('Calculating %valid...')
     metrics['valid'] = fraction_valid(gen, n_jobs=pool)
-    gen = remove_invalid(gen, canonize=True)
+    gen = remove_invalid(gen, canonize=True, n_jobs=pool)
     if not isinstance(k, (list, tuple)):
         k = [k]
     print('Calculating unique@...')
